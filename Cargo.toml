@@ -120,3 +120,7 @@ tor = ["microservices/tor", "internet2/tor"]
 
 [package.metadata.configure_me]
 spec = "config_spec.toml"
+
+
+[patch.crates-io]
+bitcoin_scripts = { git="https://github.com/crisdut/bp-foundation", branch="fix/regtest"}
