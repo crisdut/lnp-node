@@ -211,7 +211,7 @@ fn complete_accepted(
     debug!("Funding transaction id is {}", funding_psbt.to_txid());
 
     let channel = &mut runtime.state.channel;
-    let refund_psbt = channel.refund_tx(funding_psbt, true)?;
+    let refund_psbt = channel.refund_tx(funding_psbt, false)?;
 
     trace!("Refund transaction: {:#?}", refund_psbt);
     trace!("Local keyset: {:#}", channel.constructor().local_keys());
@@ -283,7 +283,7 @@ fn complete_funding(
     let txid = runtime.state.channel.funding().txid();
     debug!("Waiting for funding transaction {} to be mined", txid);
     // TODO: Uncomment once watching daemon will be running
-    // runtime.send_ctl(&mut event.endpoints, ServiceId::Watch, CtlMsg::Track(txid))?;
+    runtime.send_ctl(event.endpoints, ServiceId::Watch, CtlMsg::Track { txid, depth: 0 })?;
 
     Ok(ChannelPropose::Published)
 }

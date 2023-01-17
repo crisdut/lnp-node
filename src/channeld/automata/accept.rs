@@ -12,15 +12,16 @@
 // If not, see <https://opensource.org/licenses/MIT>.
 
 use lnp::channel::bolt::Lifecycle;
-use lnp::p2p::bolt::{ActiveChannelId, Messages};
+use lnp::p2p::bolt::{ActiveChannelId, FundingSigned, Messages as LnMsg};
 use lnp::Extension;
+use lnp_rpc::ServiceId;
 use microservices::cli::LogStyle;
 
 use super::Error;
 use crate::automata::{Event, StateMachine};
-use crate::bus::{AcceptChannelFrom, BusMsg};
+use crate::bus::{AcceptChannelFrom, BusMsg, CtlMsg};
 use crate::channeld::runtime::Runtime;
-use crate::Endpoints;
+use crate::{Endpoints, Responder};
 
 /// Channel proposal workflow
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -85,15 +86,18 @@ impl ChannelAccept {
 impl ChannelAccept {
     /// Constructs channel acceptance state machine
     pub fn with(
-        endpoints: &mut Endpoints,
-        accept_channel_from: AcceptChannelFrom,
         runtime: &mut Runtime,
+        endpoints: &mut Endpoints,
+        request: AcceptChannelFrom,
     ) -> Result<ChannelAccept, Error> {
-        let open_channel = Messages::OpenChannel(accept_channel_from.channel_req);
+        let open_channel = LnMsg::OpenChannel(request.channel_req.clone());
         runtime.state.channel.update_from_peer(&open_channel)?;
 
-        runtime.send_p2p(endpoints, open_channel)?;
-
+        let _ = runtime.send_ctl(
+            endpoints,
+            ServiceId::Signer,
+            CtlMsg::DeriveKeyset(request.channel_req.temporary_channel_id.into()),
+        );
         Ok(ChannelAccept::Accepted)
     }
 
@@ -105,17 +109,66 @@ impl ChannelAccept {
                 "Accepted".ended(),
                 channel_id.actor(),
             ),
-            _ => todo!(),
+            ChannelAccept::Signed => {
+                format!("{} channel {:#} from a remote peer", "Signed".ended(), channel_id.actor(),)
+            }
+            ChannelAccept::Funded => {
+                format!("{} channel {:#} from a remote peer", "Funded".ended(), channel_id.actor(),)
+            }
+            ChannelAccept::Locked => {
+                format!("{} channel {:#} from a remote peer", "Locked".ended(), channel_id.actor(),)
+            }
         }
     }
 }
 
-fn finish_accepted(_event: Event<BusMsg>, _runtime: &mut Runtime) -> Result<ChannelAccept, Error> {
-    todo!()
+fn finish_accepted(event: Event<BusMsg>, runtime: &mut Runtime) -> Result<ChannelAccept, Error> {
+    let accept_event = match event.message {
+        BusMsg::Ctl(CtlMsg::Keyset(_, keys)) => {
+            runtime.state.channel.constructor_mut().set_local_keys(keys);
+
+            let accept_channel = runtime.state.channel.compose_accept_channel()?;
+            let accept_channel = LnMsg::AcceptChannel(accept_channel);
+            runtime.send_p2p(event.endpoints, accept_channel)?;
+            Ok(ChannelAccept::Signed)
+        }
+        wrong_msg => {
+            return Err(Error::UnexpectedMessage(wrong_msg, Lifecycle::Accepted, event.source))
+        }
+    };
+    accept_event
 }
 
-fn finish_signed(_event: Event<BusMsg>, _runtime: &mut Runtime) -> Result<ChannelAccept, Error> {
-    todo!()
+fn finish_signed(event: Event<BusMsg>, runtime: &mut Runtime) -> Result<ChannelAccept, Error> {
+    let signed_event = match event.message {
+        BusMsg::Bolt(LnMsg::FundingCreated(funding)) => {
+            let old_id = runtime
+                .state
+                .channel
+                .temp_channel_id()
+                .expect("Error to retrieve temporary channel id");
+            runtime.state.channel.update_from_peer(&LnMsg::FundingCreated(funding.clone()))?;
+            let new_id = runtime.state.channel.channel_id().expect("Error to retrieve channel id");
+
+            runtime.send_ctl(event.endpoints, ServiceId::LnpBroker, CtlMsg::ChannelUpdate {
+                old_id,
+                new_id,
+            })?;
+            runtime.send_p2p(
+                event.endpoints,
+                LnMsg::FundingSigned(FundingSigned {
+                    channel_id: new_id,
+                    signature: funding.signature,
+                }),
+            )?;
+            Ok(ChannelAccept::Funded)
+        }
+        wrong_msg => {
+            return Err(Error::UnexpectedMessage(wrong_msg, Lifecycle::Signing, event.source))
+        }
+    };
+
+    signed_event
 }
 
 fn finish_funded(_event: Event<BusMsg>, _runtime: &mut Runtime) -> Result<ChannelAccept, Error> {

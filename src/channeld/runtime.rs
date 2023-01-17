@@ -197,11 +197,11 @@ impl Runtime {
 
             LnMsg::ChannelReestablish(_)
             | LnMsg::AcceptChannel(_)
+            | LnMsg::FundingCreated(_)
             | LnMsg::FundingSigned(_)
             | LnMsg::FundingLocked(_) => {
                 self.process(endpoints, ServiceId::PeerBolt(remote_id), BusMsg::Bolt(message))?;
             }
-
             _ => {
                 // Ignore the rest of LN peer messages
             }
@@ -230,7 +230,7 @@ impl Runtime {
             // Processing remote request to open a channel
             CtlMsg::AcceptChannelFrom(bus::AcceptChannelFrom { remote_id, .. }) => {
                 self.enquirer = None;
-                let remote_id = remote_id.clone();
+                self.state.remote_id = Some(remote_id);
                 if self.process(endpoints, source, BusMsg::Ctl(request))? {
                     // Updating state only if the request was processed
                     self.state.remote_id = Some(remote_id);
@@ -240,6 +240,7 @@ impl Runtime {
             CtlMsg::FundingConstructed(_)
             | CtlMsg::TxFound(_)
             | CtlMsg::Signed(_)
+            | CtlMsg::Keyset(..)
             | CtlMsg::Error { .. }
             | CtlMsg::EsbError { .. } => {
                 self.process(endpoints, source, BusMsg::Ctl(request))?;
