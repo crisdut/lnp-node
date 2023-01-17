@@ -195,8 +195,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_scripts"
 version = "0.9.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b6512b98b415f5a1147c521f2989bd3cbbc77378c9f3777382835859119729a"
+source = "git+https://github.com/crisdut/bp-foundation?branch=master#af000857d86d5ec85846b29f3d6d530bc8562c78"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -916,6 +915,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
+name = "form_urlencoded"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9c384f161156f5260c24a097c56119f9be8c798586aecc13afbcbe7b7e26bf8"
+dependencies = [
+ "percent-encoding",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1022,6 +1030,16 @@ name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
+
+[[package]]
+name = "idna"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e14ddfc70884202db2244c223200c204c2bda1bc6e0998d11b5e024d657209e6"
+dependencies = [
+ "unicode-bidi",
+ "unicode-normalization",
+]
 
 [[package]]
 name = "indexmap"
@@ -1262,8 +1280,7 @@ dependencies = [
 [[package]]
 name = "lnp-core"
 version = "0.9.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb157e66f06e267575e1c8468e61946a959d58c9f73d46784ebc54651e6525f3"
+source = "git+https://github.com/crisdut/lnp-core?branch=fix/open-channel#8cec537b26581b1fce33f34c290effedb81b0c49"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -1282,8 +1299,7 @@ dependencies = [
 [[package]]
 name = "lnp2p"
 version = "0.9.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f2779e6016a334f8868e7cf501caff6a0f9204cae6b1b7af3111ca8ea5eec17"
+source = "git+https://github.com/crisdut/lnp-core?branch=fix/open-channel#8cec537b26581b1fce33f34c290effedb81b0c49"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -1326,6 +1342,7 @@ dependencies = [
  "lnp-core",
  "lnp_rpc",
  "lnpbp",
+ "lnpbp-invoice",
  "log",
  "microservices",
  "miniscript",
@@ -1373,6 +1390,27 @@ dependencies = [
  "serde 1.0.139",
  "serde_with",
  "strict_encoding",
+]
+
+[[package]]
+name = "lnpbp-invoice"
+version = "0.9.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4450894de75abd432e851c5ab08aa222b12aab6e3cbe086d3ee4da4eff860dc"
+dependencies = [
+ "amplify",
+ "bitcoin",
+ "bitcoin_scripts",
+ "bp-core",
+ "chrono",
+ "commit_verify",
+ "descriptor-wallet",
+ "internet2",
+ "lnp-core",
+ "lnpbp",
+ "miniscript",
+ "strict_encoding",
+ "url",
 ]
 
 [[package]]
@@ -1562,6 +1600,12 @@ name = "paste"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
+
+[[package]]
+name = "percent-encoding"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
 
 [[package]]
 name = "pin-project-lite"
@@ -2262,6 +2306,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "tinyvec"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87cc5ceb3875bb20c2890005a4e226a4651264a5c75edb2421b52861a0a0cb50"
+dependencies = [
+ "tinyvec_macros",
+]
+
+[[package]]
+name = "tinyvec_macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
+
+[[package]]
 name = "tokio"
 version = "1.19.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2308,10 +2367,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 
 [[package]]
+name = "unicode-bidi"
+version = "0.3.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "099b7128301d285f79ddd55b9a83d5e6b9e97c92e0ea0daebee7263e932de992"
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bd2fe26506023ed7b5e1e315add59d6f584c621d037f9368fea9cfb988f368c"
+
+[[package]]
+name = "unicode-normalization"
+version = "0.1.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c5713f0fc4b5db668a2ac63cdb7bb4469d8c9fed047b1d0292cc7b0ce2ba921"
+dependencies = [
+ "tinyvec",
+]
 
 [[package]]
 name = "unicode-segmentation"
@@ -2352,6 +2426,17 @@ name = "untrusted"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
+
+[[package]]
+name = "url"
+version = "2.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d68c799ae75762b8c3fe375feb6600ef5602c883c5d21eb51c09f22b83c4643"
+dependencies = [
+ "form_urlencoded",
+ "idna",
+ "percent-encoding",
+]
 
 [[package]]
 name = "version-compare"
