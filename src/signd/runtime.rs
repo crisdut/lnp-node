@@ -63,7 +63,6 @@ where
         let account_xpriv = ExtendedPrivKey::strict_decode(&mut file)?;
         let signing_account =
             MemorySigningAccount::with(secp, master_id, derivation, account_xpriv);
-
         let mut provider = MemoryKeyProvider::with(secp, true);
         provider.add_account(signing_account);
         Ok(provider)

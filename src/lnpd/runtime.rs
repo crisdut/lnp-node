@@ -462,6 +462,10 @@ impl Runtime {
                     error!("Client #{} got disconnected", report.client);
                 }
             }
+            CtlMsg::ChannelUpdate { old_id, new_id } => {
+                self.update_chanel_id(old_id.to_owned(), new_id.to_owned());
+                return Ok(());
+            }
 
             wrong_msg => {
                 error!("Request is not supported by the CTL interface");

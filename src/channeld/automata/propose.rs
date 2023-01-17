@@ -283,7 +283,7 @@ fn complete_funding(
     let txid = runtime.state.channel.funding().txid();
     debug!("Waiting for funding transaction {} to be mined", txid);
     // TODO: Uncomment once watching daemon will be running
-    // runtime.send_ctl(&mut event.endpoints, ServiceId::Watch, CtlMsg::Track(txid))?;
+    runtime.send_ctl(event.endpoints, ServiceId::Watch, CtlMsg::Track { txid, depth: 0 })?;
 
     Ok(ChannelPropose::Published)
 }
