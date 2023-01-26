@@ -76,7 +76,7 @@ impl WatcherRuntime {
 
     pub(self) fn send_over_bridge(&mut self, req: BusMsg) -> Result<(), Error> {
         debug!("Forwarding electrum update message over BRIDGE interface to the runtime");
-        self.bridge.send_to(ServiceBus::Bridge, self.identity.clone(), req)?;
+        self.bridge.send_to(ServiceBus::Bridge, ServiceId::Watch, req)?;
         Ok(())
     }
 
@@ -85,8 +85,20 @@ impl WatcherRuntime {
         let msg = self.receiver.recv()?;
         debug!("Processing message {}", msg);
         trace!("Message details: {:?}", msg);
-        // TODO: Forward electrum notifications over the bridge
-        // self.send_over_bridge(msg.into()).expect("watcher bridge is halted");
+        // Forward electrum notifications over the bridge
+        match msg {
+            ElectrumUpdate::TxBatch(transactions, _) => {
+                for transaction in transactions {
+                    self.send_over_bridge(BusMsg::Ctl(CtlMsg::TxFound(crate::bus::TxStatus {
+                        txid: transaction.txid(),
+                        block_pos: None,
+                    })))
+                    .expect("unable forward electrum notifications over the bridge");
+                }
+            }
+            _ => { /* nothing to do here */ }
+        }
+
         Ok(())
     }
 }
@@ -153,6 +165,9 @@ impl Runtime {
                     if *required_height >= tx_status.block_pos.map(|b| b.pos).unwrap_or_default() {
                         let service_id = service_id.clone();
                         self.untrack(tx_status.txid);
+                        self.electrum_worker
+                            .untrack_transaction(tx_status.txid)
+                            .expect("unable untrack transaction in electrum worker");
                         endpoints.send_to(
                             ServiceBus::Ctl,
                             ServiceId::Watch,
@@ -196,12 +211,17 @@ impl Runtime {
             CtlMsg::Track { txid, depth } => {
                 debug!("Tracking status for tx {}", txid);
                 self.track_list.insert(txid, (depth, source));
-                // TODO: Request worker
+                self.electrum_worker
+                    .track_transaction(txid)
+                    .expect("unable track transaction in electrum worker");
             }
 
             CtlMsg::Untrack(txid) => {
-                // TODO: Request worker
+                debug!("Untracking status for tx {}", txid);
                 self.untrack(txid);
+                self.electrum_worker
+                    .untrack_transaction(txid)
+                    .expect("unable untrack transaction in electrum worker");
             }
 
             wrong_msg => {
