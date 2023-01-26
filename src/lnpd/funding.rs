@@ -304,6 +304,7 @@ impl FundingWallet {
             &[UnhardenedIndex::zero(), self.wallet_data.last_normal_index],
         )?;
         let spk = descriptor.script_pubkey();
+        println!("Funding Wallet: {:?}", self.network());
         let address = AddressCompat::from_script(&spk.into(), self.network.into())
             .expect("Incorrect scriptPubkey to represents address");
         Ok(address)

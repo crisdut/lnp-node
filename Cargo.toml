@@ -46,7 +46,7 @@ required-features = ["server"]
 # LNP/BP crates
 amplify = "3.13.0"
 strict_encoding = { version = "0.9.0-rc.2", features = ["miniscript"] }
-bitcoin_scripts = "0.9.0-rc.1"
+bitcoin_scripts = "0.9.0"
 bitcoin_blockchain = "0.9.0-rc.1"
 descriptor-wallet = { version = "0.9.0-rc.1", features = ["keygen", "miniscript", "electrum", "sign", "construct"] }
 lnpbp = "0.9.0-rc.1"
